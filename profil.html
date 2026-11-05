@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil Pemilik — Pedigree</title>
+<style>
+  :root {
+    --bg: #e6ded2;
+    --surface: #ffffff;
+    --surface-leaf: #f4efe7;
+    --ink: #4a3626;
+    --ink-soft: #7c6148;
+    --ink-faint: #a4886d;
+    --line: #d0bb9e;
+    --line-soft: #e1cfb4;
+    --accent: #8c5a2b;
+    --accent-ink: #5c3c1a;
+    --accent-soft: #e9d3ab;
+    --danger: #a33b28;
+    --ok: #3f6b45;
+    --shadow: 0 1px 2px rgba(60,40,20,0.07), 0 6px 16px -8px rgba(60,40,20,0.2);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #241a12; --surface: #2f251b; --surface-leaf: #271e15;
+      --ink: #ecdfcd; --ink-soft: #c1a688; --ink-faint: #8c745c;
+      --line: #52402d; --line-soft: #40311f;
+      --accent: #dba25e; --accent-ink: #f5ddb1; --accent-soft: #4b3620;
+      --danger: #e0806c; --ok: #8fc198;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 24px -12px rgba(0,0,0,0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 64px;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 860px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 56px -26px rgba(20,20,15,0.4);
+    padding: 32px 34px 38px;
+  }
+
+  .masthead { text-align: center; padding-bottom: 20px; border-bottom: 2px solid var(--line); }
+  h1 {
+    font-family: ui-serif, Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(24px, 3.4vw, 32px);
+    line-height: 1.12;
+    margin: 0;
+  }
+  .title-sub {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 6px; font-weight: 600;
+  }
+
+  .nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 26px; align-items: center; }
+  .nav-spacer { margin-left: auto; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font: inherit; font-size: 13px; font-weight: 600;
+    border-radius: 6px; padding: 9px 15px; cursor: pointer; text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-danger { color: var(--danger); }
+  .btn-danger:hover { border-color: var(--danger); }
+  .btn[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
+  .btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  h2 { font-family: ui-serif, Charter, Georgia, serif; font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .section-note { font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 18px; max-width: 68ch; }
+
+  .card {
+    background: var(--surface-leaf);
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    padding: 20px 22px 22px;
+    margin-bottom: 26px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px 18px; }
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .field.wide { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-soft); }
+  label .req { color: var(--danger); }
+  .hint { font-size: 11px; color: var(--ink-faint); font-weight: 500; line-height: 1.45; }
+  input[type="text"], textarea {
+    font: inherit; font-size: 14px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; padding: 9px 11px; width: 100%;
+  }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  textarea { resize: vertical; min-height: 66px; line-height: 1.5; }
+  input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  .logo-row { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  .logo-preview {
+    width: 140px; height: 140px; flex: 0 0 auto;
+    border-radius: 8px; border: 1px dashed var(--line); background: var(--surface);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+  .logo-preview span { font-size: 11px; color: var(--ink-faint); text-align: center; padding: 10px; }
+  .logo-actions { display: flex; flex-direction: column; gap: 9px; }
+  input[type="file"] { font-size: 12.5px; max-width: 250px; }
+
+  .form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: center; }
+  .msg { font-size: 13px; font-weight: 600; }
+  .msg.ok { color: var(--ok); }
+  .msg.err { color: var(--danger); }
+
+  /* pratinjau kepala pedigree */
+  .preview-frame {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    background: var(--surface);
+  }
+  .pv-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .pv-subject { min-width: 0; }
+  .pv-name {
+    font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
+    font-weight: 700; font-size: 30px; line-height: 1.08; letter-spacing: -0.015em;
+  }
+  .pv-id {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.05em;
+    color: var(--ink-soft); margin-top: 6px;
+  }
+  .pv-owner { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); max-width: 250px; }
+  .pv-owner div { font-size: 11.5px; line-height: 1.45; color: var(--ink-faint); font-weight: 600; }
+  .pv-owner .pv-phone { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-weight: 500; }
+  .pv-logo img { height: 96px; width: auto; max-width: 160px; object-fit: contain; display: block; }
+  .pv-logo .none {
+    height: 96px; width: 96px; border: 1px dashed var(--line); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ink-faint); text-align: center; padding: 8px;
+  }
+
+  .callout {
+    display: flex; gap: 10px; padding: 12px 14px;
+    background: var(--surface-leaf); border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.55; color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .callout strong { color: var(--ink); }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em; background: var(--surface-leaf);
+    border: 1px solid var(--line-soft); border-radius: 3px; padding: 1px 5px;
+  }
+  .steps { counter-reset: step; display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .steps li {
+    counter-increment: step; display: grid; grid-template-columns: 26px 1fr; gap: 11px;
+    font-size: 13.5px; line-height: 1.55; color: var(--ink-soft);
+  }
+  .steps li::before {
+    content: counter(step); width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent-ink);
+    font-size: 11.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps strong { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <h1 id="pageTitle">Profil Pemilik</h1>
+    <div class="title-sub">Langkah pertama sebelum mengisi data merpati</div>
+  </header>
+
+  <nav class="nav">
+    <a class="btn" href="mulai.html">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5"/></svg>
+      Panduan
+    </a>
+    <a class="btn nav-spacer" href="input.html" id="linkInput" aria-disabled="true">
+      Lanjut ke Input Data
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+    </a>
+    <a class="btn" href="pedigree.html" id="linkPedigree" aria-disabled="true">
+      Lihat Pedigree
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+    </a>
+  </nav>
+
+  <section class="card">
+    <h2>Identitas Pemilik</h2>
+    <p class="section-note">
+      Data ini muncul di setiap pedigree yang Anda buat, termasuk pada berkas yang dibagikan
+      dan hasil unduhan JPG. Bisa diubah kapan saja — pedigree akan langsung mengikuti.
+    </p>
+
+    <div class="grid">
+      <div class="field">
+        <label for="fName">Nama Pemilik <span class="req">*</span></label>
+        <input type="text" id="fName" placeholder="Nama lengkap atau nama kandang" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fPhone">No. Telepon</label>
+        <input type="text" id="fPhone" class="mono" placeholder="0812xxxxxxxx" autocomplete="off">
+      </div>
+      <div class="field wide">
+        <label for="fAddress">Alamat Kandang</label>
+        <textarea id="fAddress" placeholder="Jalan, kelurahan, kota"></textarea>
+        <span class="hint">Ditampilkan ringkas di bawah nama. Alamat panjang akan dipendekkan otomatis pada pedigree.</span>
+      </div>
+
+      <div class="field wide">
+        <label for="fLogo">Logo Kandang</label>
+        <div class="logo-row">
+          <div class="logo-preview" id="logoPreview"><span>Belum ada logo</span></div>
+          <div class="logo-actions">
+            <input type="file" id="fLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+            <button type="button" class="btn btn-danger" id="btnClearLogo">Hapus logo</button>
+            <span class="hint" style="max-width:250px">
+              Muncul di pojok kanan atas pedigree. Bentuk persegi atau potret paling pas.
+              Gambar besar diperkecil otomatis agar berkas tetap ringan.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" id="btnSave">Simpan Profil</button>
+      <button type="button" class="btn btn-danger" id="btnClearAll">Hapus Profil</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Pratinjau</h2>
+    <p class="section-note">Beginilah identitas Anda akan tampil di kepala setiap pedigree.</p>
+    <div class="preview-frame">
+      <div class="pv-head">
+        <div class="pv-subject">
+          <div class="pv-name">Nama Merpati</div>
+          <div class="pv-id">ID00-00000 / BB / C</div>
+          <div class="pv-owner" id="pvOwner"></div>
+        </div>
+        <div class="pv-logo" id="pvLogo"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Cara Pakai</h2>
+    <ol class="steps">
+      <li><span>Isi <strong>Identitas Pemilik</strong> di halaman ini, lalu simpan.</span></li>
+      <li><span>Buka <strong>Input Data</strong> untuk mendaftarkan merpati beserta induk dan fotonya.</span></li>
+      <li><span>Buka <strong>Lihat Pedigree</strong> untuk memeriksa silsilah, lalu unduh sebagai JPG bila perlu.</span></li>
+      <li><span>Di halaman pedigree, klik <strong>Bagikan HTML</strong> untuk membuat satu berkas mandiri yang bisa dikirim ke orang lain.</span></li>
+    </ol>
+    <div class="callout">
+      <span>💡</span>
+      <span><strong>Berkas yang dibagikan berdiri sendiri.</strong>
+      Semua data, foto, dan logo tertanam di dalamnya, jadi penerima cukup membukanya dengan
+      double-klik — tanpa internet, tanpa berkas pendamping. Data penerima sendiri tidak akan
+      tertimpa, dan mereka tidak bisa mengubah isi berkas kiriman Anda.</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PROFILE_KEY = "pedigree.profile";
+  var LOGO_MAX = 600;   // sisi terpanjang logo, piksel
+
+  var F = {
+    name: document.getElementById("fName"),
+    phone: document.getElementById("fPhone"),
+    address: document.getElementById("fAddress")
+  };
+  var logoData = null;
+
+  function msg(text, kind) {
+    var el = document.getElementById("msg");
+    el.textContent = text || "";
+    el.className = "msg" + (kind ? " " + kind : "");
+    if (text) setTimeout(function () {
+      if (el.textContent === text) { el.textContent = ""; el.className = "msg"; }
+    }, 5000);
+  }
+
+  function readProfile() {
+    try {
+      return JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    } catch (e) {
+      console.error("Profil tersimpan rusak:", e);
+      return null;
+    }
+  }
+
+  function setLogoPreview(src) {
+    document.getElementById("logoPreview").innerHTML = src ?
+      '<img src="' + src + '" alt="Pratinjau logo">' :
+      "<span>Belum ada logo</span>";
+  }
+
+  // Logo diperkecil sebelum disimpan: berkas mentah dari kamera atau desainer
+  // bisa berukuran megabyte, dan itu ikut tertanam di setiap berkas yang dibagikan.
+  function shrinkImage(dataUri, maxSide) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        var w = img.width, h = img.height;
+        if (Math.max(w, h) <= maxSide) { resolve(dataUri); return; }
+        var s = maxSide / Math.max(w, h);
+        var c = document.createElement("canvas");
+        c.width = Math.round(w * s);
+        c.height = Math.round(h * s);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        // PNG dipertahankan agar logo berlatar transparan tidak jadi kotak putih.
+        resolve(c.toDataURL("image/png"));
+      };
+      img.onerror = function () { resolve(dataUri); };
+      img.src = dataUri;
+    });
+  }
+
+  document.getElementById("fLogo").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      shrinkImage(reader.result, LOGO_MAX).then(function (uri) {
+        logoData = uri;
+        setLogoPreview(logoData);
+        renderPreview();
+      });
+    };
+    reader.onerror = function () { msg("Gagal membaca berkas logo.", "err"); };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("btnClearLogo").addEventListener("click", function () {
+    logoData = null;
+    document.getElementById("fLogo").value = "";
+    setLogoPreview(null);
+    renderPreview();
+  });
+
+  function currentProfile() {
+    return {
+      name: F.name.value.trim(),
+      phone: F.phone.value.trim(),
+      address: F.address.value.trim(),
+      logo: logoData
+    };
+  }
+
+  function renderPreview() {
+    var p = currentProfile();
+    var lines = [];
+    if (p.name) lines.push('<div class="pv-name-line">' + esc(p.name) + "</div>");
+    if (p.address) lines.push("<div>" + esc(p.address) + "</div>");
+    if (p.phone) lines.push('<div class="pv-phone">' + esc(p.phone) + "</div>");
+    document.getElementById("pvOwner").innerHTML = lines.length ? lines.join("") :
+      '<div style="font-style:italic">Identitas pemilik belum diisi</div>';
+    document.getElementById("pvLogo").innerHTML = p.logo ?
+      '<img src="' + p.logo + '" alt="Logo kandang">' :
+      '<div class="none">Logo belum ada</div>';
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function refreshNav() {
+    var saved = readProfile();
+    var ready = !!(saved && saved.name);
+    ["linkInput", "linkPedigree"].forEach(function (id) {
+      var el = document.getElementById(id);
+      el.setAttribute("aria-disabled", ready ? "false" : "true");
+      el.title = ready ? "" : "Isi dan simpan nama pemilik lebih dulu";
+    });
+    document.getElementById("pageTitle").textContent = ready ? "Profil Pemilik" : "Profil Pemilik";
+  }
+
+  document.getElementById("btnSave").addEventListener("click", function () {
+    var p = currentProfile();
+    if (!p.name) {
+      F.name.setAttribute("aria-invalid", "true");
+      F.name.focus();
+      msg("Nama pemilik wajib diisi.", "err");
+      return;
+    }
+    F.name.removeAttribute("aria-invalid");
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+      msg("Profil disimpan.", "ok");
+      refreshNav();
+    } catch (e) {
+      msg("Penyimpanan penuh. Coba logo beresolusi lebih kecil.", "err");
+      console.error(e);
+    }
+  });
+
+  document.getElementById("btnClearAll").addEventListener("click", function () {
+    if (!confirm("Hapus profil pemilik?\n\nData merpati tidak ikut terhapus.")) return;
+    try { localStorage.removeItem(PROFILE_KEY); } catch (e) { console.error(e); }
+    F.name.value = ""; F.phone.value = ""; F.address.value = "";
+    logoData = null;
+    document.getElementById("fLogo").value = "";
+    setLogoPreview(null);
+    renderPreview();
+    refreshNav();
+    msg("Profil dihapus.", "ok");
+  });
+
+  Object.keys(F).forEach(function (k) {
+    F[k].addEventListener("input", renderPreview);
+  });
+
+  // ---- awal ----
+  var saved = readProfile();
+  if (saved) {
+    F.name.value = saved.name || "";
+    F.phone.value = saved.phone || "";
+    F.address.value = saved.address || "";
+    logoData = saved.logo || null;
+    setLogoPreview(logoData);
+  }
+  renderPreview();
+  refreshNav();
+})();
+</script>
+</body>
+</html>

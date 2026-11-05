@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mulai di Sini — Pedigree Merpati</title>
+<style>
+  :root {
+    --bg: #e6ded2;
+    --surface: #ffffff;
+    --surface-leaf: #f4efe7;
+    --ink: #4a3626;
+    --ink-soft: #7c6148;
+    --ink-faint: #a4886d;
+    --line: #d0bb9e;
+    --line-soft: #e1cfb4;
+    --accent: #8c5a2b;
+    --accent-ink: #5c3c1a;
+    --accent-soft: #e9d3ab;
+    --warn: #a33b28;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #241a12; --surface: #2f251b; --surface-leaf: #271e15;
+      --ink: #ecdfcd; --ink-soft: #c1a688; --ink-faint: #8c745c;
+      --line: #52402d; --line-soft: #40311f;
+      --accent: #dba25e; --accent-ink: #f5ddb1; --accent-soft: #4b3620;
+      --warn: #e0806c;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 64px;
+    line-height: 1.55;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 780px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 56px -26px rgba(20,20,15,0.4);
+    padding: 36px 38px 42px;
+  }
+
+  header { text-align: center; padding-bottom: 22px; border-bottom: 2px solid var(--line); }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent-ink); background: var(--accent-soft);
+    display: inline-block; padding: 4px 10px; border-radius: 3px; margin: 0 0 14px;
+  }
+  h1 {
+    font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
+    font-weight: 700; font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.1; margin: 0 0 8px;
+  }
+  .sub { font-size: 14.5px; color: var(--ink-soft); margin: 0; }
+
+  h2 {
+    font-family: ui-serif, Charter, Georgia, serif;
+    font-size: 21px; font-weight: 700; margin: 34px 0 6px;
+  }
+  h2:first-of-type { margin-top: 28px; }
+  p { margin: 0 0 12px; font-size: 14.5px; color: var(--ink-soft); }
+  p strong, li strong { color: var(--ink); }
+
+  /* langkah bernomor - urutannya memang harus diikuti berurutan */
+  .steps { counter-reset: step; list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+  .steps > li {
+    counter-increment: step;
+    display: grid; grid-template-columns: 34px 1fr; gap: 14px;
+    align-items: start;
+  }
+  .steps > li::before {
+    content: counter(step);
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .steps h3 {
+    margin: 4px 0 5px; font-size: 15.5px; font-weight: 700; color: var(--ink);
+  }
+  .steps p { margin: 0 0 6px; font-size: 14px; }
+  .steps ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-soft); }
+  .steps ul li { margin-bottom: 4px; }
+
+  code, .file {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--surface-leaf);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    padding: 1.5px 6px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .go {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #fff; text-decoration: none;
+    font-size: 15px; font-weight: 700;
+    padding: 13px 22px; border-radius: 7px; margin-top: 8px;
+  }
+  .go:hover { filter: brightness(1.08); }
+  .go:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .go svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+  .note {
+    display: flex; gap: 11px; padding: 13px 15px;
+    background: var(--surface-leaf); border-left: 3px solid var(--accent);
+    border-radius: 0 7px 7px 0; font-size: 13.5px; color: var(--ink-soft);
+    margin: 14px 0;
+  }
+  .note.warn { border-left-color: var(--warn); }
+  .note strong { color: var(--ink); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin: 10px 0 4px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  td:first-child { white-space: nowrap; }
+
+  footer {
+    margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <p class="eyebrow">Panduan Pemasangan</p>
+    <h1>Mulai di Sini</h1>
+    <p class="sub">Cara memakai sistem pedigree ini di laptop baru — tanpa internet, tanpa pemasangan apa pun.</p>
+  </header>
+
+  <h2>Yang Anda butuhkan</h2>
+  <p>
+    Hanya folder ini beserta isinya, dan peramban web yang sudah ada di setiap laptop
+    (Chrome, Safari, Edge, atau Firefox). <strong>Tidak perlu internet, Excel, maupun memasang aplikasi.</strong>
+  </p>
+
+  <table>
+    <thead><tr><th>Berkas</th><th>Gunanya</th></tr></thead>
+    <tbody>
+      <tr><td class="file">mulai.html</td><td>Halaman ini — panduan.</td></tr>
+      <tr><td class="file">profil.html</td><td>Identitas pemilik dan logo kandang. Diisi sekali di awal.</td></tr>
+      <tr><td class="file">input.html</td><td>Mendaftarkan merpati, induk, prestasi, dan foto.</td></tr>
+      <tr><td class="file">pedigree.html</td><td>Menampilkan silsilah, unduh JPG, dan membagikan.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Langkah-langkah</h2>
+
+  <ol class="steps">
+    <li>
+      <div>
+        <h3>Salin folder ke laptop tujuan</h3>
+        <p>
+          Pindahkan seluruh folder lewat flashdisk, AirDrop, WhatsApp, atau email.
+          Keempat berkas harus berada dalam satu folder yang sama.
+        </p>
+        <p>
+          Kalau dikirim sebagai <span class="file">.zip</span>, ekstrak dulu — jangan dibuka
+          langsung dari dalam zip, karena berkasnya tidak akan saling menemukan.
+        </p>
+      </div>
+    </li>
+
+    <li>
+      <div>
+        <h3>Buka <span class="file">profil.html</span> dengan klik dua kali</h3>
+        <p>
+          Halaman akan terbuka di peramban. Isi <strong>Nama Pemilik</strong> (wajib),
+          <strong>Alamat Kandang</strong>, <strong>No. Telepon</strong>, lalu unggah
+          <strong>Logo Kandang</strong> bila ada. Klik <strong>Simpan Profil</strong>.
+        </p>
+        <p>
+          Identitas ini akan muncul di setiap pedigree yang dibuat. Bisa diubah kapan saja.
+        </p>
+      </div>
+    </li>
+
+    <li>
+      <div>
+        <h3>Daftarkan merpati di <span class="file">input.html</span></h3>
+        <p>Untuk tiap merpati, isi nomor cincin lalu data lainnya. Kolom yang perlu diperhatikan:</p>
+        <ul>
+          <li><strong>Nomor Ring</strong> — wajib dan harus unik. Ini kunci penghubung antar merpati.</li>
+          <li><strong>Dam</strong> = induk betina, <strong>Sire</strong> = induk jantan. Isi dengan nomor ring induknya.</li>
+          <li>Induk yang tidak bercincin: tulis <code>No Ring</code>. Induk yang tidak diketahui: kosongkan saja.</li>
+          <li><strong>Ach</strong> — prestasi, pisahkan dengan koma.</li>
+        </ul>
+        <p style="margin-top:8px">
+          Daftarkan juga induk dan kakek-neneknya sebagai merpati tersendiri agar silsilahnya tersambung.
+        </p>
+      </div>
+    </li>
+
+    <li>
+      <div>
+        <h3>Lihat hasilnya di <span class="file">pedigree.html</span></h3>
+        <p>
+          Pilih merpati dari daftar, silsilahnya tersusun otomatis sampai 4 level.
+          Klik <strong>Unduh JPG</strong> untuk mendapat gambar ukuran A4 yang siap cetak.
+        </p>
+      </div>
+    </li>
+
+    <li>
+      <div>
+        <h3>Kirim ke orang lain lewat <strong>Bagikan HTML</strong></h3>
+        <p>
+          Tombol ini menghasilkan <strong>satu berkas mandiri</strong> berisi seluruh data,
+          foto, dan logo. Penerima cukup membukanya dengan klik dua kali — tanpa internet
+          dan tanpa berkas pendamping.
+        </p>
+      </div>
+    </li>
+  </ol>
+
+  <p style="text-align:center; margin-top:30px">
+    <a class="go" href="profil.html">
+      Mulai — Isi Profil Pemilik
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+    </a>
+  </p>
+
+  <h2>Yang perlu diketahui</h2>
+
+  <div class="note warn">
+    <span>⚠️</span>
+    <span><strong>Data tersimpan di peramban, bukan di dalam berkas HTML.</strong>
+    Karena itu: gunakan <strong>peramban yang sama</strong> setiap kali (kalau mulai di Chrome,
+    seterusnya pakai Chrome), dan jangan bersihkan riwayat atau data situs — data merpati
+    akan ikut terhapus. Menyalin berkas HTML ke laptop lain <strong>tidak</strong> ikut
+    membawa datanya.</span>
+  </div>
+
+  <div class="note">
+    <span>📄</span>
+    <span><strong>Berkas kiriman bersifat baca-saja.</strong>
+    Penerima bisa melihat dan mengunduh JPG, tapi tidak bisa mengubah isinya. Data milik
+    penerima sendiri juga tidak akan tertimpa oleh berkas kiriman Anda.</span>
+  </div>
+
+  <div class="note">
+    <span>🍎</span>
+    <span><strong>Khusus Mac:</strong> bila berkas berasal dari unduhan dan tidak mau terbuka,
+    klik kanan berkasnya lalu pilih <strong>Open</strong> (bukan klik dua kali) sekali saja.
+    Sesudah itu bisa dibuka normal.</span>
+  </div>
+
+  <div class="note">
+    <span>💾</span>
+    <span><strong>Cadangkan secara berkala.</strong> Di halaman Input Data ada
+    <strong>Unduh Excel</strong> dan <strong>Unduh Semua Foto</strong>. Simpan hasilnya
+    di tempat aman — itu satu-satunya salinan data Anda di luar peramban.</span>
+  </div>
+
+  <footer>
+    Pedigree Merpati · Berjalan sepenuhnya di peramban, tanpa server dan tanpa internet.
+  </footer>
+
+</div>
+</body>
+</html>

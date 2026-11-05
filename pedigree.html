@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedigree Merpati</title>
+<style>
+  :root {
+    /* Lembar pedigree putih polos; latar halaman dibuat netral hangat
+       agar tepi lembar tetap terbaca sebagai "kertas". */
+    --bg: #e6ded2;
+    --surface: #ffffff;
+    --surface-leaf: #f4efe7;
+    --ink: #4a3626;
+    --ink-soft: #7c6148;
+    --ink-faint: #a4886d;
+    --line: #d0bb9e;
+    --line-soft: #e1cfb4;
+    --accent: #8c5a2b;
+    --accent-ink: #5c3c1a;
+    --accent-soft: #e9d3ab;
+    --shadow: 0 1px 2px rgba(60,40,20,0.07), 0 6px 16px -8px rgba(60,40,20,0.2);
+  }
+  :root[data-theme="dark"] {
+    --bg: #241a12;
+    --surface: #372a1e;
+    --surface-leaf: #2e2318;
+    --ink: #ecdfcd;
+    --ink-soft: #c1a688;
+    --ink-faint: #8c745c;
+    --line: #52402d;
+    --line-soft: #40311f;
+    --accent: #dba25e;
+    --accent-ink: #f5ddb1;
+    --accent-soft: #4b3620;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 24px -12px rgba(0,0,0,0.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #241a12;
+      --surface: #372a1e;
+      --surface-leaf: #2e2318;
+      --ink: #ecdfcd;
+      --ink-soft: #c1a688;
+      --ink-faint: #8c745c;
+      --line: #52402d;
+      --line-soft: #40311f;
+      --accent: #dba25e;
+      --accent-ink: #f5ddb1;
+      --accent-soft: #4b3620;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 24px -12px rgba(0,0,0,0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .sheet {
+    width: 100%;
+    /* 4 generasi = 8 baris kotak; lembar perlu lebih lebar agar teks tetap terbaca. */
+    max-width: 1040px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 56px -26px rgba(20,20,15,0.4), 0 1px 2px rgba(20,20,15,0.08);
+    padding: 44px 40px 36px;
+  }
+
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 22px;
+    margin-bottom: 26px;
+  }
+  /* Kepala kotak pedigree: identitas merpati di kiri, logo di kanan, sejajar. */
+  .pedigree-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .subject { min-width: 0; }
+  .subject-name {
+    font-family: ui-serif, Charter, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .subject-id {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  /* Identitas pemilik: sengaja lebih kecil dan redup agar sorotan tetap
+     jatuh pada nama & identitas merpati di atasnya. */
+  .owner {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--line);
+    /* Garis pemisah pendek, seukuran blok teks - bukan selebar kartu. */
+    max-width: 210px;
+  }
+  .owner-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    color: var(--ink-faint);
+  }
+  .owner-address {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--ink-faint);
+    margin-top: 1px;
+  }
+  .owner-contact {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .brand { flex: 0 0 auto; display: flex; align-items: center; }
+  /* Logo asli 864x954 (potret) — dibatasi tingginya agar proporsional. */
+  .brand img {
+    height: 110px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    display: block;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 3px;
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: ui-serif, Charter, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4.2vw, 38px);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0;
+  }
+  .lede code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    background: var(--surface-leaf);
+    border: 1px solid var(--line-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+    margin-bottom: 26px;
+  }
+  .controls label {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+  }
+  .select-wrap { position: relative; display: inline-flex; align-items: center; }
+  select {
+    appearance: none;
+    font: inherit;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 34px 9px 12px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 13px;
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--ink-soft);
+    border-bottom: 1.5px solid var(--ink-soft);
+    transform: rotate(45deg) translateY(-3px);
+    pointer-events: none;
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 14px;
+    background: var(--surface);
+  }
+  .nav-link:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .nav-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav-link svg {
+    width: 14px; height: 14px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border-radius: 5px;
+    padding: 5px 10px;
+  }
+
+  #shareBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 14px;
+    cursor: pointer;
+  }
+  #shareBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-ink); }
+  #shareBtn:disabled { opacity: 0.6; cursor: progress; }
+  #shareBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #shareBtn svg {
+    width: 15px; height: 15px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  #downloadBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 9px 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  #downloadBtn:hover:not(:disabled) { filter: brightness(1.08); }
+  #downloadBtn:disabled { opacity: 0.6; cursor: progress; }
+  #downloadBtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #downloadBtn svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-left: auto;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--line); }
+  .legend .swatch.blank { background: var(--surface); border-style: dashed; }
+
+  .chart-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 22px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stage-wrap { overflow-x: auto; }
+  .stage {
+    position: relative;
+    width: 100%;
+    min-width: 860px;
+  }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .stage svg path {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.6;
+  }
+  .stage svg path.focal-line { stroke: var(--accent); stroke-width: 1.8; }
+
+  .pbox {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    overflow: hidden;
+  }
+  /* Semua kotak berlatar putih polos - tidak ada pembedaan warna antara
+     merpati yang terdaftar dan yang hanya dikenal nomor cincinnya. */
+  .pbox.focal { border-color: var(--accent); border-width: 1.5px; }
+  /* Induk tanpa data - kotak sengaja dibiarkan kosong, digambar putus-putus
+     agar terbaca sebagai tempat yang memang tidak akan terisi. */
+  .pbox.blank { border-style: dashed; box-shadow: none; }
+
+  .pbox-photo {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+  }
+  /* contain, bukan cover: badan merpati harus terlihat utuh, tidak terpotong. */
+  .pbox-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .pbox-head {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    text-align: left;
+  }
+  .pbox-name {
+    font-family: ui-serif, Charter, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  .pbox-text {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-height: 0;
+  }
+  .pbox-id {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    font-weight: 600;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    color: var(--ink-soft);
+  }
+  .pbox-ach {
+    max-width: 100%;
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--accent-ink);
+    padding-left: 9px;
+    position: relative;
+  }
+  .pbox-ach::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-faint);
+  }
+  footer p { margin: 0 0 4px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pbox, .stage svg path { transition: opacity 0.15s ease; }
+  }
+
+  @media print {
+    @page { size: A4 portrait; margin: 14mm; }
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border: none; max-width: none; width: 100%; padding: 0; }
+    .controls { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <p class="eyebrow" id="eyebrow">Pedigree Merpati Balap</p>
+    <h1 id="pageHeading">Silsilah Merpati</h1>
+    <p class="lede">
+      Menampilkan empat level silsilah: merpati, orang tua, kakek–nenek, dan buyut.
+      Tiap kotak memuat nama merpati beserta nomor cincin, warna, dan jenis kelamin
+      (<em>C</em> = cock/jantan, <em>H</em> = hen/betina), lalu daftar prestasinya.
+    </p>
+  </header>
+
+  <section class="controls">
+    <label for="birdSelect">Pilih merpati</label>
+    <div class="select-wrap">
+      <select id="birdSelect"></select>
+    </div>
+    <a class="nav-link" href="profil.html" id="navProfil">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3.5L5.5 8 10 12.5"/></svg>
+      Profil
+    </a>
+    <a class="nav-link" href="input.html" id="navInput">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3.5L5.5 8 10 12.5"/></svg>
+      Input Data
+    </a>
+    <button type="button" id="downloadBtn">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M8 1.5v8.5M4.5 7L8 10.5 11.5 7M2 13.5h12"/>
+      </svg>
+      <span id="downloadLabel">Unduh JPG</span>
+    </button>
+    <button type="button" id="shareBtn">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M11 5.5a1.8 1.8 0 100-3.6 1.8 1.8 0 000 3.6zM4.5 9.8a1.8 1.8 0 100-3.6 1.8 1.8 0 000 3.6zM11 14.1a1.8 1.8 0 100-3.6 1.8 1.8 0 000 3.6zM6.1 7.1l3.4-1.8M6.1 8.9l3.4 1.8"/>
+      </svg>
+      <span id="shareLabel">Bagikan HTML</span>
+    </button>
+    <div class="legend">
+      <span class="source-badge" id="sourceBadge" hidden></span>
+      <span><i class="swatch blank"></i>Kotak putus-putus — induk tanpa data</span>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="pedigree-head">
+      <div class="subject">
+        <div class="subject-name" id="subjectName"></div>
+        <div class="subject-id" id="subjectId"></div>
+        <div class="owner">
+          <div class="owner-name" id="ownerName"></div>
+          <div class="owner-address" id="ownerAddress"></div>
+          <div class="owner-contact" id="ownerContact"></div>
+        </div>
+      </div>
+      <div class="brand"><img id="brandLogo" alt="Logo kandang"></div>
+    </div>
+    <div class="stage-wrap">
+      <div class="stage" id="stage">
+        <svg id="connectors" viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Diagram silsilah merpati terpilih, menghubungkan setiap burung dengan induk jantan (sire) dan induk betina (dam)"></svg>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Kotak bergaris putus-putus menandai induk yang datanya belum ada — silsilah tetap digambar penuh sampai level 4.</p>
+    <p id="footNote">Data dan foto tersimpan di peramban ini. Gunakan <strong>Bagikan HTML</strong> untuk membuat satu berkas mandiri yang bisa dikirim ke orang lain.</p>
+  </footer>
+
+</div><!-- /.sheet -->
+
+<script>
+(function () {
+  /* RECORDS:BEGIN */
+  var RECORDS = [];
+  /* RECORDS:END */
+  // Identitas pemilik - satu sumber untuk tampilan layar dan hasil ekspor JPG.
+  // Identitas pemilik berasal dari profil.html, bukan ditulis tetap di sini -
+  // berkas ini dipakai siapa saja. Pada berkas hasil "Bagikan HTML", profil
+  // ikut tertanam di blok SHARED di bawah dan menang atas profil penerima.
+  var PROFILE_KEY = "pedigree.profile";
+  var STORE_KEY = "pedigree.data";
+  var OWNER = { name: "", address: "", phone: "", logo: null };
+
+  // "ID15-11111 / D+ / C" — bagian yang kosong dilewati, jadi tidak ada " / " menggantung.
+  // "No Ring" di kolom Dam/Sire berarti induknya memang tidak bercincin.
+  // Kotaknya tetap digambar sebagai penanda posisi, tetapi dibiarkan kosong.
+  function isNoRing(id) { return /^\s*no\s*ring\s*$/i.test(id || ""); }
+
+  function ringLine(rec, id) {
+    if (isNoRing(id)) return "";
+    return [id, rec && rec.color, rec && rec.sex].filter(Boolean).join(" / ");
+  }
+  // "ID15-11111 - Gunner", atau hanya ID Ring bila merpati tidak bernama.
+  function pickerLabel(rec) {
+    return rec.name ? rec.id + " - " + rec.name : rec.id;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+    /* ASSETS:BEGIN */
+  var LOGO = null;
+  var PHOTOS = {};
+  /* ASSETS:END */
+
+  // ---------------------------------------------------------------------
+  // Data terbagi (SHARED)
+  //
+  // Tombol "Bagikan HTML" menyalin berkas ini dan menanam data saat itu ke
+  // dalam blok di bawah. Pada salinan itu SHARED bernilai true, sehingga
+  // halaman TIDAK membaca penyimpanan peramban penerima - isinya tetap
+  // pedigree milik pengirim, dan data penerima sendiri tidak tertimpa.
+  // ---------------------------------------------------------------------
+  /* SHARED:BEGIN */
+  var SHARED = false;
+  var SHARED_DATA = null;
+  /* SHARED:END */
+
+  var usingDraft = false;
+
+  function normalizeRecords(list) {
+    return list.map(function (r) {
+      return {
+        id: r.id,
+        name: r.name || "",
+        color: r.color || "",
+        // Halaman input menyimpan "Cock"/"Hen"; pedigree memakai C/H.
+        sex: /^c/i.test(r.sex || "") ? "C" : (/^h/i.test(r.sex || "") ? "H" : ""),
+        ach: r.ach || "",
+        dam: r.dam || "",
+        sire: r.sire || ""
+      };
+    });
+  }
+
+  if (SHARED && SHARED_DATA) {
+    RECORDS = normalizeRecords(SHARED_DATA.records || []);
+    PHOTOS = SHARED_DATA.photos || {};
+    OWNER = SHARED_DATA.profile || OWNER;
+    LOGO = OWNER.logo || null;
+  } else {
+    try {
+      var prof = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+      if (prof) { OWNER = prof; LOGO = prof.logo || null; }
+    } catch (e) {
+      console.error("Gagal membaca profil pemilik:", e);
+    }
+    try {
+      var draft = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (draft && Array.isArray(draft.records) && draft.records.length) {
+        RECORDS = normalizeRecords(draft.records);
+        if (draft.photos) {
+          Object.keys(draft.photos).forEach(function (k) { PHOTOS[k] = draft.photos[k]; });
+        }
+        usingDraft = true;
+      }
+    } catch (e) {
+      console.error("Gagal membaca data dari halaman input:", e);
+    }
+  }
+
+
+  var byId = {};
+  RECORDS.forEach(function (r) { byId[r.id] = r; });
+
+  function photoSrc(id) { return PHOTOS[id] || null; }
+
+  // 4 level silsilah:
+  //   level 1 = gen 0 = merpati terpilih
+  //   level 2 = gen 1 = orang tua
+  //   level 3 = gen 2 = kakek/nenek
+  //   level 4 = gen 3 = buyut
+  var MAX_GEN = 3;
+
+  // Foto hanya muncul sampai level 2 (orang tua); selebihnya teks saja.
+  var PHOTO_MAX_GEN = 1;
+  // Pohon selalu dibangun penuh sampai 4 level, seperti formulir pedigree cetak:
+  // induk yang tidak ada di data - baik karena kolomnya kosong maupun ditulis
+  // "No Ring" - tetap mendapat kotak, hanya dibiarkan kosong. Dengan begitu
+  // bentuk silsilah selalu sama dan tidak ada cabang yang terlihat terpotong.
+  function build(id, gen) {
+    if (gen > MAX_GEN) return null;
+    var blank = !id || isNoRing(id);
+    var rec = blank ? null : byId[id];
+    return {
+      id: blank ? "" : id,
+      gen: gen,
+      blank: blank,
+      name: rec ? rec.name : "",
+      ringLine: blank ? "" : ringLine(rec, id),
+      ach: rec ? rec.ach : null,
+      hasRecord: !!rec,
+      // Kotak kosong pun diteruskan, supaya level di bawahnya ikut terbentuk.
+      sire: gen < MAX_GEN ? build(rec ? rec.sire : "", gen + 1) : null,
+      dam: gen < MAX_GEN ? build(rec ? rec.dam : "", gen + 1) : null
+    };
+  }
+
+  function deepestGen(node, acc) {
+    if (!node) return acc;
+    acc = Math.max(acc, node.gen);
+    acc = deepestGen(node.sire, acc);
+    acc = deepestGen(node.dam, acc);
+    return acc;
+  }
+
+  function collectNodes(node, slot, out) {
+    if (!node) return;
+    out.push({ node: node, slot: slot });
+    collectNodes(node.sire, slot * 2, out);
+    collectNodes(node.dam, slot * 2 + 1, out);
+  }
+
+  var BOX_W = 210, COL_GAP = 58, MARGIN = 18;
+
+  // Tinggi kotak
+  //
+  // Level 1-2 memuat foto, jadi tingginya tetap. Level 3-4 hanya teks,
+  // jadi separuhnya - tetapi otomatis memanjang bila prestasinya banyak,
+  // supaya tidak ada teks yang terpotong. Aturan ini berlaku umum:
+  // tinggi apa pun yang dibutuhkan isi kotak akan dipenuhi.
+  var BOX_H_PHOTO = 250;       // level 1-2 (gen 0-1)
+  var BOX_H_TEXT = 125;        // level 3-4 (gen 2-3), setengah tinggi
+  var SLOT_GAP = 22;           // jarak menganggur antar kotak di level terbawah
+
+  // Ukuran baris, disamakan dengan CSS agar perhitungan tinggi cocok
+  // dengan hasil render sesungguhnya.
+  var LH_NAME = 19, LH_RING = 15, LH_ACH = 13, PAD_BOX = 7, GAP_BOX = 7;
+
+  // Kanvas bayangan untuk mengukur lebar teks - dipakai menghitung berapa
+  // baris yang dibutuhkan sebuah prestasi setelah dipotong.
+  var measureCtx = document.createElement("canvas").getContext("2d");
+
+  function wrapText(ctx, text, maxW) {
+    var words = String(text).split(/\s+/), lines = [], line = "";
+    words.forEach(function (w) {
+      var test = line ? line + " " + w : w;
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+      else { line = test; }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  // Prestasi dipisah koma, tiap bagian bisa terpotong jadi beberapa baris.
+  // first: true hanya pada baris pertama tiap prestasi, supaya titik penanda
+  // tidak ikut tercetak di baris lanjutan.
+  function achLines(ach, ctx, maxW) {
+    var out = [];
+    if (!ach) return out;
+    ctx.font = '600 9.5px -apple-system, "Segoe UI", Roboto, sans-serif';
+    String(ach).split(",").forEach(function (a) {
+      a = a.trim();
+      if (!a) return;
+      wrapText(ctx, a, maxW).forEach(function (line, li) {
+        out.push({ text: line, first: li === 0 });
+      });
+    });
+    return out;
+  }
+
+  var ACH_W = BOX_W - PAD_BOX * 2 - 9;   // lebar teks prestasi (dikurangi indent titik)
+
+  function boxHeight(n) {
+    var withPhoto = n.gen <= PHOTO_MAX_GEN && !!photoSrc(n.id);
+    if (withPhoto) return BOX_H_PHOTO;
+    if (n.blank) return n.gen <= PHOTO_MAX_GEN ? BOX_H_PHOTO : BOX_H_TEXT;
+
+    var lines = achLines(n.ach, measureCtx, ACH_W).length;
+    var needed = PAD_BOX * 2 + (n.name ? LH_NAME : 0) + LH_RING +
+      (lines ? GAP_BOX + lines * LH_ACH : 0);
+    var floor = n.gen <= PHOTO_MAX_GEN ? BOX_H_PHOTO : BOX_H_TEXT;
+    return Math.max(floor, needed);
+  }
+
+  // Tata letak hasil render terakhir, dipakai ulang saat mengekspor JPG.
+  var lastLayout = null;
+
+  function render(rootId) {
+    var root = build(rootId, 0);
+
+    // Kepala kotak pedigree: nama merpati terpilih + baris identitasnya.
+    var rec = byId[rootId];
+    var hasName = !!(rec && rec.name);
+    document.getElementById("subjectName").textContent = hasName ? rec.name : rootId;
+    // Tanpa nama, ID sudah dipakai sebagai judul - jangan diulang di baris identitas.
+    document.getElementById("subjectId").textContent = hasName ?
+      ringLine(rec, rootId) : ringLine(rec, "");
+
+    var maxGen = deepestGen(root, 0);
+    var cols = maxGen + 1;
+    var maxSlots = Math.pow(2, maxGen);
+
+    var W = MARGIN * 2 + cols * BOX_W + (cols - 1) * COL_GAP;
+
+    var nodes = [];
+    collectNodes(root, 0, nodes);
+
+    // Tinggi tiap kotak dihitung dari isinya lebih dulu.
+    nodes.forEach(function (item) { item.h = boxHeight(item.node); });
+
+    // Jarak baris di level terbawah (pitch) menentukan seluruh tata letak.
+    // Kotak generasi ke-g menempati pita setinggi 2^(maxGen-g) x pitch, jadi
+    // pitch harus cukup besar agar kotak tertinggi di SETIAP generasi muat -
+    // termasuk saat sebuah kotak memanjang karena prestasinya banyak.
+    var pitch = 0;
+    nodes.forEach(function (item) {
+      var band = Math.pow(2, maxGen - item.node.gen);
+      pitch = Math.max(pitch, (item.h + SLOT_GAP) / band);
+    });
+
+    var H = MARGIN * 2 + maxSlots * pitch;
+
+    function bandH(gen) { return (maxSlots * pitch) / Math.pow(2, gen); }
+    function centerY(gen, slot) { return MARGIN + (slot + 0.5) * bandH(gen); }
+    function x(gen) { return MARGIN + gen * (BOX_W + COL_GAP); }
+
+    // boxes
+    var stage = document.getElementById("stage");
+    stage.style.aspectRatio = W + " / " + H;
+    var boxesHtml = "";
+    var boxes = [];
+    nodes.forEach(function (item) {
+      var n = item.node, slot = item.slot, bh = item.h;
+      var bx = x(n.gen), by = centerY(n.gen, slot) - bh / 2;
+      boxes.push({ n: n, slot: slot, x: bx, y: by, h: bh });
+      var leftPct = (bx / W * 100).toFixed(3);
+      var topPct = (by / H * 100).toFixed(3);
+      var wPct = (BOX_W / W * 100).toFixed(3);
+      var hPct = (bh / H * 100).toFixed(3);
+
+      var classes = ["pbox"];
+      if (n.gen === 0) classes.push("focal");
+
+      // Induk "No Ring": kotak digambar sebagai penanda posisi, isinya kosong.
+      if (n.blank) {
+        boxesHtml += '<div class="pbox blank" style="left:' + leftPct + "%;top:" + topPct +
+          "%;width:" + wPct + "%;height:" + hPct + '%"></div>';
+        return;
+      }
+
+      // Foto hanya sampai level 2 (merpati terpilih dan orang tuanya).
+      // Level 3-4 cukup identitas dan prestasi, supaya kotaknya tetap
+      // terbaca saat silsilah melebar.
+      //
+      // Tanpa foto, area gambar dihilangkan sama sekali - identitas dan
+      // prestasi tetap mulai dari atas kotak, sejajar dengan kotak berfoto.
+      var src = n.gen <= PHOTO_MAX_GEN ? photoSrc(n.id) : null;
+      var photoHtml = src ?
+        '<div class="pbox-photo">' +
+          '<img src="' + src + '" alt="Foto ' + esc(n.id) + '" loading="lazy">' +
+        "</div>" : "";
+
+      // Tanpa prestasi -> kotak prestasi dibiarkan kosong, tanpa penanda apa pun.
+      // Beberapa prestasi dipisah koma di Excel; ditampilkan sebagai baris terpisah.
+      var achHtml = "";
+      if (n.ach) {
+        achHtml = n.ach.split(",").map(function (a) {
+          return a.trim();
+        }).filter(Boolean).map(function (a) {
+          return '<div class="pbox-ach">' + esc(a) + "</div>";
+        }).join("");
+      }
+
+      // Identitas di kiri atas: nama merpati (besar) di atas baris ID / warna / kelamin.
+      var nameHtml = n.name ? '<div class="pbox-name">' + esc(n.name) + "</div>" : "";
+
+      boxesHtml += '<div class="' + classes.join(" ") + '" style="left:' + leftPct + '%;top:' + topPct + '%;width:' + wPct + '%;height:' + hPct + '%">' +
+        '<div class="pbox-head">' + nameHtml +
+          '<div class="pbox-id">' + esc(n.ringLine) + "</div>" +
+        "</div>" +
+        photoHtml +
+        '<div class="pbox-text">' + achHtml + "</div>" +
+        "</div>";
+    });
+
+    // connectors - disimpan sebagai ruas garis agar bisa dipakai ulang oleh
+    // penggambar canvas (ekspor JPG), bukan hanya oleh SVG.
+    var segs = [];
+    nodes.forEach(function (item) {
+      var n = item.node, slot = item.slot;
+      if (!n.sire && !n.dam) return;
+      var cx = x(n.gen) + BOX_W, cy = centerY(n.gen, slot);
+      var nx = x(n.gen + 1), midX = cx + COL_GAP / 2;
+      var sireY = centerY(n.gen + 1, slot * 2);
+      var damY = centerY(n.gen + 1, slot * 2 + 1);
+      var focal = n.gen === 0;
+      segs.push({ x1: cx,   y1: cy,    x2: midX, y2: cy,    focal: focal });
+      segs.push({ x1: midX, y1: sireY, x2: midX, y2: damY,  focal: focal });
+      segs.push({ x1: midX, y1: sireY, x2: nx,   y2: sireY, focal: focal });
+      segs.push({ x1: midX, y1: damY,  x2: nx,   y2: damY,  focal: focal });
+    });
+
+    var svg = document.getElementById("connectors");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.innerHTML = segs.map(function (s) {
+      return '<path class="' + (s.focal ? "focal-line" : "") +
+        '" d="M ' + s.x1 + " " + s.y1 + " L " + s.x2 + " " + s.y2 + '"></path>';
+    }).join("");
+
+    // remove old boxes, keep svg
+    Array.prototype.slice.call(stage.querySelectorAll(".pbox")).forEach(function (el) { el.remove(); });
+    stage.insertAdjacentHTML("beforeend", boxesHtml);
+
+    // Simpan tata letak terakhir untuk dipakai fitur unduh JPG.
+    lastLayout = { W: W, H: H, boxes: boxes, segs: segs, rootId: rootId };
+  }
+
+  // ---------------------------------------------------------------------
+  // Unduh JPG
+  //
+  // Pedigree digambar ulang ke <canvas> memakai data tata letak yang sama
+  // dengan tampilan layar (lastLayout), bukan memotret DOM. Alasannya:
+  // tanpa pustaka luar, halaman tetap bisa dibuka offline lewat double-klik.
+  // Semua foto berupa data URI, jadi canvas tidak ter-taint dan bisa diekspor.
+  // ---------------------------------------------------------------------
+  // Hasil unduhan berukuran A4 potret pada 300 DPI (210 x 297 mm),
+  // siap cetak tanpa perlu diubah ukurannya lagi.
+  var A4_W = 2480, A4_H = 3508;
+  var A4_MARGIN = 100;       // margin kertas, dalam piksel 300 DPI (~8,5 mm)
+  var HEAD_H = 185;          // tinggi kepala (nama + identitas + pemilik + logo)
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function loadImage(src) {
+    return new Promise(function (resolve) {
+      if (!src) { resolve(null); return; }
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { resolve(null); };  // gambar rusak -> lewati saja
+      img.src = src;
+    });
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Gambar "contain": seluruh badan merpati terlihat, tidak terpotong.
+  function drawContain(ctx, img, x, y, w, h) {
+    var scale = Math.min(w / img.width, h / img.height);
+    var dw = img.width * scale, dh = img.height * scale;
+    ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  }
+
+  function exportJPG() {
+    if (!lastLayout) return Promise.resolve();
+
+    var L = lastLayout;
+    var rec = byId[L.rootId];
+    var hasName = !!(rec && rec.name);
+
+    var C = {
+      surface: cssVar("--surface"),
+      ink: cssVar("--ink"),
+      inkSoft: cssVar("--ink-soft"),
+      inkFaint: cssVar("--ink-faint"),
+      line: cssVar("--line"),
+      lineSoft: cssVar("--line-soft"),
+      accent: cssVar("--accent"),
+      accentInk: cssVar("--accent-ink"),
+      accentSoft: cssVar("--accent-soft")
+    };
+
+    // Batas level foto disamakan dengan tampilan layar.
+    var srcs = L.boxes.map(function (b) {
+      return b.n.gen <= PHOTO_MAX_GEN ? photoSrc(b.n.id) : null;
+    });
+    return Promise.all([loadImage(LOGO)].concat(srcs.map(loadImage))).then(function (imgs) {
+      var logoImg = imgs[0], photos = imgs.slice(1);
+
+      // Kanvas berukuran A4 potret pada 300 DPI (210 x 297 mm).
+      var canvas = document.createElement("canvas");
+      canvas.width = A4_W;
+      canvas.height = A4_H;
+      var ctx = canvas.getContext("2d");
+      ctx.textBaseline = "top";
+
+      // latar - JPG tidak punya transparansi, jadi harus diisi
+      ctx.fillStyle = C.surface;
+      ctx.fillRect(0, 0, A4_W, A4_H);
+
+      // Pedigree diperkecil/diperbesar sekali agar pas di dalam margin A4,
+      // menjaga rasionya. Lebar dan tinggi sama-sama dibatasi supaya
+      // silsilah yang dalam tidak terpotong di bawah.
+      var cw = L.W, ch = HEAD_H + L.H;
+      var fit = Math.min((A4_W - A4_MARGIN * 2) / cw, (A4_H - A4_MARGIN * 2) / ch);
+      ctx.save();
+      // Dipusatkan mendatar dan tegak agar tampil seimbang di atas kertas.
+      ctx.translate((A4_W - cw * fit) / 2, (A4_H - ch * fit) / 2);
+      ctx.scale(fit, fit);
+
+      // ---- kepala: nama + identitas di kiri, logo di kanan ----
+      var hx = 0, hy = 0;
+      ctx.fillStyle = C.ink;
+      ctx.font = '700 40px ui-serif, Charter, "Iowan Old Style", Georgia, serif';
+      ctx.fillText(hasName ? rec.name : L.rootId, hx, hy + 24);
+      ctx.fillStyle = C.inkSoft;
+      ctx.font = '600 16px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+      ctx.fillText(hasName ? ringLine(rec, L.rootId) : ringLine(rec, ""), hx, hy + 76);
+
+      // Identitas pemilik: dipisah garis pendek, ukuran lebih kecil dan redup
+      // agar sorotan tetap pada identitas merpati di atasnya.
+      ctx.strokeStyle = C.line;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy + 104);
+      ctx.lineTo(hx + 250, hy + 104);
+      ctx.stroke();
+
+      // Baris pemilik ditumpuk sesuai isian yang ada; yang kosong dilewati
+      // supaya tidak menyisakan celah.
+      ctx.fillStyle = C.inkFaint;
+      var oy2 = hy + 114;
+      if (OWNER.name) {
+        ctx.font = '600 13px -apple-system, "Segoe UI", Roboto, sans-serif';
+        ctx.fillText(OWNER.name, hx, oy2);
+        oy2 += 17;
+      }
+      if (OWNER.address) {
+        ctx.font = '400 12px -apple-system, "Segoe UI", Roboto, sans-serif';
+        wrapText(ctx, OWNER.address, 250).slice(0, 2).forEach(function (line) {
+          ctx.fillText(line, hx, oy2);
+          oy2 += 15;
+        });
+      }
+      if (OWNER.phone) {
+        ctx.font = '400 12.5px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+        ctx.fillText(OWNER.phone, hx, oy2);
+      }
+
+      if (logoImg) {
+        var lh = 104, lw = logoImg.width * (lh / logoImg.height);
+        ctx.drawImage(logoImg, cw - lw, hy + 10, lw, lh);
+      }
+
+      ctx.strokeStyle = C.line;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, HEAD_H - 16);
+      ctx.lineTo(cw, HEAD_H - 16);
+      ctx.stroke();
+
+      // ---- garis penghubung ----
+      var oy = HEAD_H, ox = 0;
+      L.segs.forEach(function (s) {
+        ctx.strokeStyle = s.focal ? C.accent : C.line;
+        ctx.lineWidth = s.focal ? 1.8 : 1.6;
+        ctx.beginPath();
+        ctx.moveTo(ox + s.x1, oy + s.y1);
+        ctx.lineTo(ox + s.x2, oy + s.y2);
+        ctx.stroke();
+      });
+
+      // ---- kotak merpati ----
+      L.boxes.forEach(function (b, i) {
+        var n = b.n, bx = ox + b.x, by = oy + b.y, bh = b.h;
+        var hasPhoto = !!photos[i];
+
+        // Induk "No Ring": hanya kerangka kotak putus-putus, tanpa isi.
+        if (n.blank) {
+          ctx.fillStyle = C.surface;
+          roundRect(ctx, bx, by, BOX_W, bh, 7);
+          ctx.fill();
+          ctx.save();
+          ctx.setLineDash([5, 4]);
+          ctx.strokeStyle = C.line;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.restore();
+          return;
+        }
+
+        ctx.fillStyle = C.surface;
+        roundRect(ctx, bx, by, BOX_W, bh, 7);
+        ctx.fill();
+        ctx.strokeStyle = n.gen === 0 ? C.accent : C.line;
+        ctx.lineWidth = n.gen === 0 ? 1.5 : 1;
+        ctx.stroke();
+
+        var px = bx + 7, py = by + 7, pw = BOX_W - 14;
+
+        // Prestasi dipotong jadi baris lebih dulu karena tingginya dibutuhkan
+        // untuk menghitung sisa ruang foto.
+        // first: true hanya pada baris pertama tiap prestasi, supaya titik
+        // penanda tidak ikut tercetak di baris lanjutan teks yang terpotong.
+        var lines = achLines(n.ach, ctx, pw - 9);
+        var achH = lines.length * 13;
+
+        // Isi selalu mulai dari atas kotak, baik ada foto maupun tidak,
+        // supaya semua kotak sebaris rata di posisi yang sama.
+        var cy = py;
+
+        // nama + baris identitas
+        if (n.name) {
+          ctx.fillStyle = C.ink;
+          ctx.font = '700 16px ui-serif, Charter, "Iowan Old Style", Georgia, serif';
+          ctx.fillText(n.name, px, cy);
+          cy += 19;
+        }
+        ctx.fillStyle = C.inkSoft;
+        ctx.font = '600 10.5px ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+        ctx.fillText(n.ringLine, px, cy);
+        cy += 15;
+
+        if (hasPhoto) {
+          var photoY = cy + 3;
+          // Prestasi yang sangat panjang bisa menghabiskan ruang; foto dijamin
+          // punya tinggi minimum agar roundRect tidak menerima nilai negatif.
+          var photoH = Math.max(24, (by + bh - 7) - photoY - (achH ? achH + 6 : 0));
+
+          ctx.fillStyle = C.surface;
+          roundRect(ctx, px, photoY, pw, photoH, 4);
+          ctx.fill();
+          ctx.strokeStyle = C.lineSoft;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.save();
+          roundRect(ctx, px, photoY, pw, photoH, 4);
+          ctx.clip();
+          drawContain(ctx, photos[i], px, photoY, pw, photoH);
+          ctx.restore();
+        }
+
+        // daftar prestasi - menempel di dasar kotak bila ada foto,
+        // menyambung tepat di bawah identitas bila tidak.
+        if (lines.length) {
+          var ay = hasPhoto ? (by + bh - 7 - achH) : (cy + 6);
+          ctx.font = '600 9.5px -apple-system, "Segoe UI", Roboto, sans-serif';
+          lines.forEach(function (item) {
+            if (item.first) {
+              ctx.fillStyle = C.accent;
+              ctx.beginPath();
+              ctx.arc(px + 2, ay + 6, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.fillStyle = C.accentInk;
+            ctx.fillText(item.text, px + 9, ay);
+            ay += 13;
+          });
+        }
+      });
+      ctx.restore();
+
+      var safe = (hasName ? rec.name : L.rootId).replace(/[^A-Za-z0-9._-]+/g, "-");
+      var filename = "Pedigree " + L.rootId + (hasName ? " - " + safe : "") + ".jpg";
+
+      function triggerDownload(href, revoke) {
+        var a = document.createElement("a");
+        a.download = filename;
+        a.href = href;
+        // Harus menempel di dokumen agar klik terprogram bekerja di Firefox.
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        if (revoke) setTimeout(function () { URL.revokeObjectURL(href); }, 1000);
+      }
+
+      // Blob lebih andal daripada data URL: Safari kerap membuka data URL
+      // di tab baru alih-alih mengunduhnya, dan gambar ini berukuran besar.
+      return new Promise(function (resolve) {
+        if (canvas.toBlob) {
+          canvas.toBlob(function (blob) {
+            if (blob) triggerDownload(URL.createObjectURL(blob), true);
+            else triggerDownload(canvas.toDataURL("image/jpeg", 0.92), false);
+            resolve();
+          }, "image/jpeg", 0.92);
+        } else {
+          triggerDownload(canvas.toDataURL("image/jpeg", 0.92), false);
+          resolve();
+        }
+      });
+    });
+  }
+
+  var downloadBtn = document.getElementById("downloadBtn");
+  var downloadLabel = document.getElementById("downloadLabel");
+  downloadBtn.addEventListener("click", function () {
+    downloadBtn.disabled = true;
+    downloadLabel.textContent = "Menyiapkan…";
+    exportJPG().catch(function (err) {
+      downloadLabel.textContent = "Gagal — coba lagi";
+      console.error("Ekspor JPG gagal:", err);
+    }).then(function () {
+      setTimeout(function () {
+        downloadBtn.disabled = false;
+        downloadLabel.textContent = "Unduh JPG";
+      }, 900);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // Bagikan HTML
+  //
+  // Berkas ini menyalin dirinya sendiri lewat outerHTML, lalu menanam data
+  // saat ini ke blok SHARED. Hasilnya satu berkas mandiri: penerima cukup
+  // double-klik, tanpa internet dan tanpa berkas pendamping.
+  //
+  // outerHTML dipakai karena fetch() ke berkas sendiri diblokir pada
+  // protokol file://. Kotak hasil render dibersihkan lebih dulu supaya yang
+  // tersalin hanya kerangkanya - isinya digambar ulang saat dibuka.
+  // ---------------------------------------------------------------------
+  function buildSharedHtml() {
+    var payload = {
+      records: RECORDS,
+      photos: PHOTOS,
+      profile: OWNER,
+      dibuat: new Date().toISOString().slice(0, 10)
+    };
+    // Urutan tutup-skrip di dalam data harus dilucuti: peramban mengakhiri
+    // blok skrip pada kemunculan pertamanya, bahkan di dalam string.
+    var json = JSON.stringify(payload).replace(/<\//g, "<\\/");
+
+    var doc = document.documentElement.cloneNode(true);
+    var stage = doc.querySelector("#stage");
+    if (stage) {
+      Array.prototype.slice.call(stage.querySelectorAll(".pbox")).forEach(function (el) { el.remove(); });
+      var svg = stage.querySelector("#connectors");
+      if (svg) svg.innerHTML = "";
+      stage.removeAttribute("style");
+    }
+    // Tautan ke halaman lain tidak berguna bagi penerima - berkasnya sendirian.
+    ["navProfil", "navInput", "shareBtn"].forEach(function (id) {
+      var el = doc.querySelector("#" + id);
+      if (el) el.remove();
+    });
+    var badge = doc.querySelector("#sourceBadge");
+    if (badge) { badge.removeAttribute("hidden"); badge.textContent = ""; }
+
+    var html = "<!DOCTYPE html>\n" + doc.outerHTML;
+    var n = 0;
+    html = html.replace(/\/\* SHARED:BEGIN \*\/[\s\S]*?\/\* SHARED:END \*\//, function () {
+      n++;
+      return "/* SHARED:BEGIN */\n  var SHARED = true;\n  var SHARED_DATA = " + json + ";\n  /* SHARED:END */";
+    });
+    if (n !== 1) throw new Error("Penanda SHARED tidak ditemukan (" + n + ")");
+    return html;
+  }
+
+  var shareBtn = document.getElementById("shareBtn");
+  var shareLabel = document.getElementById("shareLabel");
+  if (SHARED) {
+    // Berkas kiriman tidak perlu membagikan dirinya lagi.
+    if (shareBtn) shareBtn.remove();
+  } else if (shareBtn) {
+    shareBtn.addEventListener("click", function () {
+      if (!RECORDS.length) { alert("Belum ada data merpati untuk dibagikan."); return; }
+      shareBtn.disabled = true;
+      shareLabel.textContent = "Menyiapkan…";
+      try {
+        var blob = new Blob([buildSharedHtml()], { type: "text/html;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        var who = (OWNER.name || "Pedigree").replace(/[^A-Za-z0-9._ -]+/g, "-");
+        a.href = url;
+        a.download = "Pedigree " + who + ".html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        shareLabel.textContent = "Tersimpan ✓";
+      } catch (err) {
+        console.error("Gagal membuat berkas bagikan:", err);
+        shareLabel.textContent = "Gagal — coba lagi";
+      }
+      setTimeout(function () {
+        shareBtn.disabled = false;
+        shareLabel.textContent = "Bagikan HTML";
+      }, 1600);
+    });
+  }
+
+  // Baris identitas pemilik yang kosong disembunyikan, supaya tidak
+  // meninggalkan ruang menganggur pada profil yang belum lengkap.
+  function setOwnerLine(id, value) {
+    var el = document.getElementById(id);
+    el.textContent = value || "";
+    el.hidden = !value;
+  }
+  setOwnerLine("ownerName", OWNER.name);
+  setOwnerLine("ownerAddress", OWNER.address);
+  setOwnerLine("ownerContact", OWNER.phone);
+
+  // Beri tahu dari mana data yang sedang tampil berasal, supaya tidak
+  // membingungkan saat isi halaman berbeda dengan berkas Excel.
+  var badge = document.getElementById("sourceBadge");
+  if (SHARED) {
+    badge.hidden = false;
+    badge.textContent = "● Berkas kiriman" +
+      (OWNER.name ? " dari " + OWNER.name : "") +
+      (SHARED_DATA && SHARED_DATA.dibuat ? " · " + SHARED_DATA.dibuat : "");
+  } else if (!RECORDS.length) {
+    badge.hidden = false;
+    badge.textContent = "● Belum ada data — isi lewat halaman Input Data";
+  }
+  if (OWNER.name) {
+    document.getElementById("pageHeading").textContent = "Silsilah " + OWNER.name;
+    document.title = "Pedigree " + OWNER.name;
+  }
+  if (SHARED) document.getElementById("footNote").hidden = true;
+
+
+  var brandLogo = document.getElementById("brandLogo");
+  if (LOGO) { brandLogo.src = LOGO; } else { brandLogo.remove(); }
+
+  var select = document.getElementById("birdSelect");
+  select.innerHTML = RECORDS.map(function (r) {
+    return '<option value="' + esc(r.id) + '">' + esc(pickerLabel(r)) + "</option>";
+  }).join("");
+  // Konidin: silsilahnya penuh 4 level sekaligus memuat kotak "No Ring".
+  select.value = "ID16-11112";
+  select.addEventListener("change", function () { render(this.value); });
+
+  render(select.value);
+})();
+</script>
+</body>
+</html>

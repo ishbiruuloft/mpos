@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Data — Pedigree</title>
+<style>
+  :root {
+    --bg: #e6ded2;
+    --surface: #ffffff;
+    --surface-leaf: #f4efe7;
+    --ink: #4a3626;
+    --ink-soft: #7c6148;
+    --ink-faint: #a4886d;
+    --line: #d0bb9e;
+    --line-soft: #e1cfb4;
+    --accent: #8c5a2b;
+    --accent-ink: #5c3c1a;
+    --accent-soft: #e9d3ab;
+    --danger: #a33b28;
+    --ok: #3f6b45;
+    --shadow: 0 1px 2px rgba(60,40,20,0.07), 0 6px 16px -8px rgba(60,40,20,0.2);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #241a12;
+      --surface: #2f251b;
+      --surface-leaf: #271e15;
+      --ink: #ecdfcd;
+      --ink-soft: #c1a688;
+      --ink-faint: #8c745c;
+      --line: #52402d;
+      --line-soft: #40311f;
+      --accent: #dba25e;
+      --accent-ink: #f5ddb1;
+      --accent-soft: #4b3620;
+      --danger: #e0806c;
+      --ok: #8fc198;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 24px -12px rgba(0,0,0,0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px 64px;
+  }
+  .sheet {
+    width: 100%;
+    max-width: 1040px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 56px -26px rgba(20,20,15,0.4);
+    padding: 30px 34px 38px;
+  }
+
+  /* ---- kepala: pemilik kiri, judul tengah, logo kanan ---- */
+  .masthead {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--line);
+  }
+  .owner-block { min-width: 0; }
+  .owner-label {
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .owner-name { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .owner-address {
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+  }
+  .owner-contact {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .title-block { text-align: center; }
+  h1 {
+    font-family: ui-serif, Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(24px, 3.4vw, 34px);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .title-sub {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    font-weight: 600;
+  }
+  .logo-block { display: flex; justify-content: flex-end; }
+  .logo-block img { height: 96px; width: auto; max-width: 170px; object-fit: contain; display: block; }
+  .logo-fallback {
+    font-family: ui-serif, Charter, Georgia, serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: right;
+    color: var(--ink-soft);
+  }
+
+  /* ---- navigasi ---- */
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0 26px;
+    align-items: center;
+  }
+  .nav-spacer { margin-left: auto; }
+
+  /* ---- tombol ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 9px 15px;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-danger { color: var(--danger); border-color: var(--line); }
+  .btn-danger:hover { border-color: var(--danger); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  h2 {
+    font-family: ui-serif, Charter, Georgia, serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .section-note { font-size: 13px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 16px; max-width: 70ch; }
+
+  /* ---- formulir ---- */
+  .card {
+    background: var(--surface-leaf);
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    padding: 20px 22px 22px;
+    margin-bottom: 26px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 14px 18px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .field.wide { grid-column: 1 / -1; }
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+  label .req { color: var(--danger); }
+  .hint { font-size: 11px; color: var(--ink-faint); font-weight: 500; line-height: 1.4; }
+  input[type="text"], select, textarea {
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 11px;
+    width: 100%;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+  input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+
+  /* ---- unggah foto ---- */
+  .photo-row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .photo-preview {
+    width: 150px;
+    height: 112px;
+    border-radius: 7px;
+    border: 1px dashed var(--line);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: contain; }
+  .photo-preview span { font-size: 11px; color: var(--ink-faint); text-align: center; padding: 8px; }
+  .photo-actions { display: flex; flex-direction: column; gap: 8px; }
+  input[type="file"] { font-size: 12.5px; max-width: 260px; }
+
+  .form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
+  .msg { font-size: 13px; font-weight: 600; }
+  .msg.ok { color: var(--ok); }
+  .msg.err { color: var(--danger); }
+
+  /* ---- tabel ---- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 900px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    background: var(--surface-leaf);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    position: sticky;
+    top: 0;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-leaf); }
+  td.ring { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-weight: 700; white-space: nowrap; }
+  td.name { font-weight: 600; }
+  td.ach { font-size: 12px; color: var(--ink-soft); max-width: 260px; }
+  .thumb { width: 46px; height: 34px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line-soft); display: block; }
+  .no-thumb { font-size: 10px; color: var(--ink-faint); }
+  .row-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+  .empty-state { padding: 34px 20px; text-align: center; color: var(--ink-faint); font-size: 13.5px; }
+
+  /* ---- panduan ---- */
+  .steps { counter-reset: step; display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 11px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .steps li::before {
+    content: counter(step);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .steps strong { color: var(--ink); }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--surface-leaf);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+  .callout {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface-leaf);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .callout strong { color: var(--ink); }
+
+  .stat-row { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat { display: flex; flex-direction: column; }
+  .stat-num { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-faint); font-weight: 600; margin-top: 2px; }
+
+  @media (max-width: 720px) {
+    .masthead { grid-template-columns: 1fr; text-align: center; gap: 14px; }
+    .owner-block, .logo-block { justify-content: center; }
+    .owner-block { text-align: center; }
+    h1 { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="owner-block">
+      <div class="owner-label">Identitas Pemilik</div>
+      <div class="owner-name" id="ownerName"></div>
+      <div class="owner-address" id="ownerAddress"></div>
+      <div class="owner-contact" id="ownerContact"></div>
+    </div>
+    <div class="title-block">
+      <h1 id="pageTitle">Pedigree</h1>
+      <div class="title-sub">Formulir Input Data Merpati</div>
+    </div>
+    <div class="logo-block" id="logoBlock"></div>
+  </header>
+
+  <p class="callout" id="profileWarn" hidden>
+    <span>👤</span>
+    <span><strong>Profil pemilik belum diisi.</strong>
+    Identitas dan logo kandang tidak akan muncul di pedigree maupun berkas yang dibagikan.
+    <a href="profil.html">Isi profil dulu →</a></span>
+  </p>
+
+  <nav class="nav">
+    <a class="btn" href="profil.html">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5"/></svg>
+      Profil
+    </a>
+    <button type="button" class="btn btn-primary" id="btnExcel">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v8.5M4.5 7L8 10.5 11.5 7M2 13.5h12"/></svg>
+      Unduh Excel (.xlsx)
+    </button>
+    <button type="button" class="btn" id="btnPhotos">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12.5h12M2 3.5h12v9H2zM5.5 7a1 1 0 100-2 1 1 0 000 2zM3 11l3.5-3 2.5 2 2-1.5L13 11"/></svg>
+      Unduh Semua Foto
+    </button>
+    <a class="btn nav-spacer" href="pedigree.html" id="linkPedigree">
+      Lihat Pedigree
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+    </a>
+  </nav>
+
+  <section class="card">
+    <h2 id="formTitle">Tambah Merpati</h2>
+    <p class="section-note">
+      Kolom bertanda <span style="color:var(--danger)">*</span> wajib diisi. Nomor cincin dipakai sebagai
+      kunci — mengisi ulang nomor yang sama akan memperbarui data lama, bukan menambah baris baru.
+    </p>
+
+    <div class="grid">
+      <div class="field">
+        <label for="fId">Nomor Ring <span class="req">*</span></label>
+        <input type="text" id="fId" class="mono" placeholder="ID16-11111" autocomplete="off">
+        <span class="hint">Format bebas, tapi harus unik. Dipakai juga untuk menamai berkas foto.</span>
+      </div>
+      <div class="field">
+        <label for="fName">Nama Merpati</label>
+        <input type="text" id="fName" placeholder="Tarsiyem" autocomplete="off">
+        <span class="hint">Boleh dikosongkan — pedigree akan menampilkan nomor ring saja.</span>
+      </div>
+      <div class="field">
+        <label for="fColor">Color</label>
+        <input type="text" id="fColor" placeholder="BB" autocomplete="off" list="colorList">
+        <span class="hint">Klik kolom untuk melihat pilihan warna, atau ketik warna lain.</span>
+        <datalist id="colorList"></datalist>
+      </div>
+      <div class="field">
+        <label for="fSex">Jenis Kelamin</label>
+        <select id="fSex">
+          <option value="">— belum diketahui —</option>
+          <option value="Cock">Cock (jantan)</option>
+          <option value="Hen">Hen (betina)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDam">Dam — Induk Betina</label>
+        <input type="text" id="fDam" class="mono" placeholder="ID13-11111" autocomplete="off" list="ringList">
+        <span class="hint">Isi <code>No Ring</code> bila induknya tidak bercincin — kotaknya tampil kosong. Kosongkan bila induknya tidak diketahui.</span>
+      </div>
+      <div class="field">
+        <label for="fSire">Sire — Induk Jantan</label>
+        <input type="text" id="fSire" class="mono" placeholder="ID14-11111" autocomplete="off" list="ringList">
+        <span class="hint">Sama seperti Dam: <code>No Ring</code> untuk induk tanpa cincin.</span>
+      </div>
+      <datalist id="ringList"></datalist>
+
+      <div class="field wide">
+        <label for="fAch">Ach — Prestasi</label>
+        <textarea id="fAch" placeholder="Juara 1 Bali, Rank 24 Semarang, Ace Pigeon Kanas XII"></textarea>
+        <span class="hint">Pisahkan tiap prestasi dengan koma. Di pedigree tiap prestasi tampil sebagai baris sendiri.</span>
+      </div>
+
+      <div class="field wide">
+        <label for="fPhoto">Foto Merpati</label>
+        <div class="photo-row">
+          <div class="photo-preview" id="photoPreview"><span>Belum ada foto</span></div>
+          <div class="photo-actions">
+            <input type="file" id="fPhoto" accept="image/jpeg,image/png,image/webp">
+            <button type="button" class="icon-btn del" id="btnClearPhoto">Hapus foto</button>
+            <span class="hint" style="max-width:260px">
+              Foto disimpan langsung di dalam halaman ini. Pilih gambar dengan badan merpati terlihat utuh —
+              pedigree menampilkannya tanpa memotong.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" id="btnSave">Simpan Merpati</button>
+      <button type="button" class="btn" id="btnReset">Bersihkan Formulir</button>
+      <span class="msg" id="formMsg"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Daftar Merpati</h2>
+    <div class="stat-row">
+      <div class="stat"><span class="stat-num" id="statTotal">0</span><span class="stat-lbl">Merpati</span></div>
+      <div class="stat"><span class="stat-num" id="statPhoto">0</span><span class="stat-lbl">Berfoto</span></div>
+      <div class="stat"><span class="stat-num" id="statAch">0</span><span class="stat-lbl">Berprestasi</span></div>
+      <div class="stat"><span class="stat-num" id="statMissing">0</span><span class="stat-lbl">Induk Belum Terdaftar</span></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Foto</th><th>Nomor Ring</th><th>Nama</th><th>Color</th><th>Sex</th>
+            <th>Prestasi</th><th>Dam</th><th>Sire</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-danger" id="btnClearAll">Hapus Semua Data</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Cara Pakai</h2>
+    <p class="section-note">
+      Halaman ini dan halaman pedigree sudah terhubung otomatis: begitu data disimpan di sini,
+      klik <strong>Lihat Pedigree</strong> dan silsilahnya langsung memakai data terbaru.
+      Langkah di bawah hanya diperlukan bila Anda ingin data tersimpan permanen ke berkas Excel.
+    </p>
+    <ol class="steps">
+      <li><span>Isi formulir lalu klik <strong>Simpan Merpati</strong>. Ulangi untuk setiap merpati, termasuk induk dan kakek-neneknya.</span></li>
+      <li><span>Klik <strong>Lihat Pedigree</strong> untuk memeriksa hasilnya. Silsilah tersusun otomatis dari kolom Dam dan Sire.</span></li>
+      <li><span>Klik <strong>Unduh Excel</strong>, lalu pindahkan berkas hasil unduhan ke folder ini menggantikan <code>test pedigree.xlsx</code>.</span></li>
+      <li><span>Klik <strong>Unduh Semua Foto</strong>, lalu pindahkan semua gambar ke folder <code>Gambar Mpos</code>. Nama berkasnya sudah otomatis sesuai nomor ring.</span></li>
+      <li><span>Jalankan <code>./update-pedigree.sh</code> di Terminal agar <code>pedigree.html</code> ditulis ulang secara permanen dari Excel dan folder foto.</span></li>
+    </ol>
+    <div class="callout">
+      <span>⚠️</span>
+      <span><strong>Kenapa tidak langsung menyimpan ke Excel?</strong>
+      Demi keamanan, halaman web tidak diizinkan menulis ke berkas di komputer Anda — itu berlaku di semua peramban.
+      Karena itu data disimpan dulu di dalam peramban, dan berkas Excel dihasilkan lewat tombol unduh.
+      Selama belum dijalankan langkah 3–5, data hanya ada di peramban ini: jangan bersihkan riwayat peramban,
+      dan salin ke Excel bila datanya penting.</span>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORE_KEY = "pedigree.data";
+  var PROFILE_KEY = "pedigree.profile";
+  var OWNER = { name: "", address: "", phone: "", logo: null };
+
+  // Pilihan warna merpati yang selalu tersedia di formulir. Warna lain yang
+  // sudah dipakai di data ikut muncul, dan kolomnya tetap bebas diketik -
+  // daftar ini saran, bukan pembatas.
+  var COLORS = ["BB", "BC", "BCPD", "BBCP", "ZK", "D+", "G+", "Red", "RB", "Val"];
+
+  // Logo diisi dari profil pemilik saat halaman dimuat.
+  var LOGO = null;
+
+  // ---------------------------------------------------------------------
+  // Penyimpanan
+  //
+  // Data disimpan di localStorage peramban. Halaman pedigree membaca kunci
+  // yang sama, sehingga keduanya selalu menampilkan data yang sama tanpa
+  // perlu langkah ekspor lebih dulu.
+  // ---------------------------------------------------------------------
+  var state = { records: [], photos: {} };
+
+  function load() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem(STORE_KEY);
+    } catch (e) {
+      console.error("Gagal membaca data tersimpan:", e);
+    }
+    if (raw) {
+      try {
+        var d = JSON.parse(raw);
+        state.records = Array.isArray(d.records) ? d.records : [];
+        state.photos = d.photos && typeof d.photos === "object" ? d.photos : {};
+        return;
+      } catch (e) {
+        console.error("Data tersimpan rusak, mulai dari kosong:", e);
+      }
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      // Kuota localStorage biasanya 5-10 MB; foto beresolusi tinggi cepat memenuhinya.
+      msg("Penyimpanan peramban penuh. Unduh Excel + foto sekarang, lalu hapus beberapa foto beresolusi besar.", "err");
+      console.error(e);
+      return false;
+    }
+  }
+
+  function msg(text, kind) {
+    var el = document.getElementById("formMsg");
+    el.textContent = text || "";
+    el.className = "msg" + (kind ? " " + kind : "");
+    if (text) setTimeout(function () {
+      if (el.textContent === text) { el.textContent = ""; el.className = "msg"; }
+    }, 6000);
+  }
+
+  // ---------------------------------------------------------------------
+  // Formulir
+  // ---------------------------------------------------------------------
+  var F = {
+    id: document.getElementById("fId"),
+    name: document.getElementById("fName"),
+    color: document.getElementById("fColor"),
+    sex: document.getElementById("fSex"),
+    ach: document.getElementById("fAch"),
+    dam: document.getElementById("fDam"),
+    sire: document.getElementById("fSire")
+  };
+  var pendingPhoto = null;   // data URI foto yang baru dipilih
+  var photoCleared = false;  // true bila pengguna menghapus foto saat menyunting
+
+  function clearForm() {
+    Object.keys(F).forEach(function (k) { F[k].value = ""; });
+    F.id.removeAttribute("aria-invalid");
+    pendingPhoto = null;
+    photoCleared = false;
+    document.getElementById("fPhoto").value = "";
+    setPreview(null);
+    document.getElementById("formTitle").textContent = "Tambah Merpati";
+    document.getElementById("btnSave").textContent = "Simpan Merpati";
+  }
+
+  function setPreview(src) {
+    var box = document.getElementById("photoPreview");
+    box.innerHTML = src ?
+      '<img src="' + src + '" alt="Pratinjau foto">' :
+      "<span>Belum ada foto</span>";
+  }
+
+  document.getElementById("fPhoto").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      pendingPhoto = reader.result;
+      photoCleared = false;
+      setPreview(pendingPhoto);
+    };
+    reader.onerror = function () { msg("Gagal membaca berkas gambar.", "err"); };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("btnClearPhoto").addEventListener("click", function () {
+    pendingPhoto = null;
+    photoCleared = true;
+    document.getElementById("fPhoto").value = "";
+    setPreview(null);
+  });
+
+  document.getElementById("btnSave").addEventListener("click", function () {
+    var id = F.id.value.trim();
+    if (!id) {
+      F.id.setAttribute("aria-invalid", "true");
+      F.id.focus();
+      msg("Nomor ring wajib diisi.", "err");
+      return;
+    }
+    F.id.removeAttribute("aria-invalid");
+
+    var rec = {
+      id: id,
+      name: F.name.value.trim(),
+      color: F.color.value.trim(),
+      sex: F.sex.value,
+      ach: F.ach.value.trim().replace(/\s*\n\s*/g, ", "),
+      dam: F.dam.value.trim(),
+      sire: F.sire.value.trim()
+    };
+
+    var idx = state.records.findIndex(function (r) { return r.id === id; });
+    var isUpdate = idx >= 0;
+    if (isUpdate) state.records[idx] = rec; else state.records.push(rec);
+
+    if (pendingPhoto) state.photos[id] = pendingPhoto;
+    else if (photoCleared) delete state.photos[id];
+
+    if (save()) {
+      msg(isUpdate ? "Data " + id + " diperbarui." : "Merpati " + id + " ditambahkan.", "ok");
+      clearForm();
+      renderAll();
+    }
+  });
+
+  document.getElementById("btnReset").addEventListener("click", function () {
+    clearForm();
+    msg("");
+  });
+
+  function editRecord(id) {
+    var rec = state.records.find(function (r) { return r.id === id; });
+    if (!rec) return;
+    F.id.value = rec.id;
+    F.name.value = rec.name || "";
+    F.color.value = rec.color || "";
+    F.sex.value = rec.sex || "";
+    F.ach.value = rec.ach || "";
+    F.dam.value = rec.dam || "";
+    F.sire.value = rec.sire || "";
+    pendingPhoto = null;
+    photoCleared = false;
+    document.getElementById("fPhoto").value = "";
+    setPreview(state.photos[id] || null);
+    document.getElementById("formTitle").textContent = "Sunting " + rec.id;
+    document.getElementById("btnSave").textContent = "Perbarui Merpati";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    F.name.focus();
+  }
+
+  function deleteRecord(id) {
+    // Induk yang dihapus tapi masih dirujuk akan tampil sebagai kotak kosong
+    // di pedigree, jadi pengguna diberi tahu lebih dulu.
+    var refs = state.records.filter(function (r) { return r.dam === id || r.sire === id; });
+    var warn = refs.length ?
+      "\n\n" + refs.length + " merpati masih mencatat " + id + " sebagai induk." : "";
+    if (!confirm("Hapus " + id + " beserta fotonya?" + warn)) return;
+    state.records = state.records.filter(function (r) { return r.id !== id; });
+    delete state.photos[id];
+    save();
+    renderAll();
+    msg(id + " dihapus.", "ok");
+  }
+
+  document.getElementById("btnClearAll").addEventListener("click", function () {
+    if (!state.records.length) { msg("Belum ada data untuk dihapus.", "err"); return; }
+    if (!confirm("Hapus SEMUA " + state.records.length + " data merpati beserta fotonya?\n\nTindakan ini tidak bisa dibatalkan.")) return;
+    state = { records: [], photos: {} };
+    save();
+    renderAll();
+    msg("Semua data dihapus.", "ok");
+  });
+
+  // ---------------------------------------------------------------------
+  // Tabel & ringkasan
+  // ---------------------------------------------------------------------
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function renderTable() {
+    var tb = document.getElementById("tbody");
+    if (!state.records.length) {
+      tb.innerHTML = '<tr><td colspan="9"><div class="empty-state">Belum ada data. Isi formulir di atas untuk menambah merpati pertama.</div></td></tr>';
+      return;
+    }
+    tb.innerHTML = state.records.map(function (r) {
+      var ph = state.photos[r.id];
+      return "<tr>" +
+        "<td>" + (ph ? '<img class="thumb" src="' + ph + '" alt="">' : '<span class="no-thumb">—</span>') + "</td>" +
+        '<td class="ring">' + esc(r.id) + "</td>" +
+        '<td class="name">' + (r.name ? esc(r.name) : '<span class="no-thumb">—</span>') + "</td>" +
+        "<td>" + esc(r.color || "—") + "</td>" +
+        "<td>" + esc(r.sex || "—") + "</td>" +
+        '<td class="ach">' + (r.ach ? esc(r.ach) : "—") + "</td>" +
+        '<td class="ring">' + esc(r.dam || "—") + "</td>" +
+        '<td class="ring">' + esc(r.sire || "—") + "</td>" +
+        '<td><div class="row-actions">' +
+          '<button type="button" class="icon-btn" data-edit="' + esc(r.id) + '">Sunting</button>' +
+          '<button type="button" class="icon-btn del" data-del="' + esc(r.id) + '">Hapus</button>' +
+        "</div></td></tr>";
+    }).join("");
+  }
+
+  function renderStats() {
+    var ids = {};
+    state.records.forEach(function (r) { ids[r.id] = true; });
+    var missing = {};
+    state.records.forEach(function (r) {
+      // "No Ring" disengaja - induk memang tanpa cincin, bukan data yang kurang.
+      [r.dam, r.sire].forEach(function (p) {
+        if (p && !ids[p] && !/^\s*no\s*ring\s*$/i.test(p)) missing[p] = true;
+      });
+    });
+    document.getElementById("statTotal").textContent = state.records.length;
+    document.getElementById("statPhoto").textContent = state.records.filter(function (r) { return state.photos[r.id]; }).length;
+    document.getElementById("statAch").textContent = state.records.filter(function (r) { return r.ach; }).length;
+    document.getElementById("statMissing").textContent = Object.keys(missing).length;
+  }
+
+  function renderDatalists() {
+    document.getElementById("ringList").innerHTML = state.records.map(function (r) {
+      return '<option value="' + esc(r.id) + '">' + esc(r.name || r.id) + "</option>";
+    }).join("");
+    // Daftar warna baku selalu tersedia, lalu ditambah warna lain yang
+    // sudah dipakai di data - kolomnya tetap bebas diketik.
+    var colors = {};
+    COLORS.forEach(function (c) { colors[c] = true; });
+    state.records.forEach(function (r) { if (r.color) colors[r.color] = true; });
+    document.getElementById("colorList").innerHTML = Object.keys(colors).map(function (c) {
+      return '<option value="' + esc(c) + '"></option>';
+    }).join("");
+  }
+
+  function renderAll() { renderTable(); renderStats(); renderDatalists(); }
+
+  document.getElementById("tbody").addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.dataset.edit) editRecord(t.dataset.edit);
+    else if (t.dataset.del) deleteRecord(t.dataset.del);
+  });
+
+  // ---------------------------------------------------------------------
+  // Penulis berkas .xlsx
+  //
+  // Ditulis manual tanpa pustaka luar agar halaman tetap bisa dibuka offline.
+  // .xlsx pada dasarnya arsip ZIP berisi XML; di sini ZIP dibuat dengan
+  // metode "store" (tanpa kompresi) supaya tidak perlu implementasi deflate.
+  // Teks sel memakai inline string, jadi tabel sharedStrings tidak diperlukan.
+  // ---------------------------------------------------------------------
+  var crcTable = (function () {
+    var t = [], c, n, k;
+    for (n = 0; n < 256; n++) {
+      c = n;
+      for (k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function zipStore(files) {
+    var enc = new TextEncoder();
+    var parts = [], central = [], offset = 0;
+
+    files.forEach(function (f) {
+      var nameB = enc.encode(f.name);
+      var data = f.data;
+      var crc = crc32(data);
+
+      var lh = new Uint8Array(30 + nameB.length);
+      var dv = new DataView(lh.buffer);
+      dv.setUint32(0, 0x04034b50, true);
+      dv.setUint16(4, 20, true);
+      dv.setUint16(6, 0, true);
+      dv.setUint16(8, 0, true);          // metode 0 = store
+      dv.setUint16(10, 0, true);
+      dv.setUint16(12, 0x2821, true);    // tanggal DOS statis - isi berkas yang penting
+      dv.setUint32(14, crc, true);
+      dv.setUint32(18, data.length, true);
+      dv.setUint32(22, data.length, true);
+      dv.setUint16(26, nameB.length, true);
+      dv.setUint16(28, 0, true);
+      lh.set(nameB, 30);
+      parts.push(lh, data);
+
+      var cd = new Uint8Array(46 + nameB.length);
+      var cv = new DataView(cd.buffer);
+      cv.setUint32(0, 0x02014b50, true);
+      cv.setUint16(4, 20, true);
+      cv.setUint16(6, 20, true);
+      cv.setUint16(8, 0, true);
+      cv.setUint16(10, 0, true);
+      cv.setUint16(12, 0, true);
+      cv.setUint16(14, 0x2821, true);
+      cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true);
+      cv.setUint32(24, data.length, true);
+      cv.setUint16(28, nameB.length, true);
+      cv.setUint16(30, 0, true);
+      cv.setUint16(32, 0, true);
+      cv.setUint16(34, 0, true);
+      cv.setUint16(36, 0, true);
+      cv.setUint32(38, 0, true);
+      cv.setUint32(42, offset, true);
+      cd.set(nameB, 46);
+      central.push(cd);
+
+      offset += lh.length + data.length;
+    });
+
+    var cdSize = central.reduce(function (a, c) { return a + c.length; }, 0);
+    var eocd = new Uint8Array(22);
+    var ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(4, 0, true);
+    ev.setUint16(6, 0, true);
+    ev.setUint16(8, files.length, true);
+    ev.setUint16(10, files.length, true);
+    ev.setUint32(12, cdSize, true);
+    ev.setUint32(16, offset, true);
+    ev.setUint16(20, 0, true);
+
+    return new Blob(parts.concat(central, [eocd]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+
+  function xmlEsc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");  // karakter kontrol ilegal di XML
+  }
+
+  function buildXlsx() {
+    // Tata letak disamakan dengan berkas asli: judul di baris 2, data mulai
+    // baris 3, kolom B sampai H. update-pedigree.sh mengenali kolom lewat
+    // judulnya, jadi urutan ini aman selama judulnya tetap.
+    var HEAD = ["ID Ring", "Nama Merpati", "Color", "Jenis Kelamin", "Ach", "Dam", "Sire"];
+    var COLS = ["B", "C", "D", "E", "F", "G", "H"];
+
+    function row(n, vals) {
+      var cells = vals.map(function (v, i) {
+        if (v === "" || v == null) return "";
+        return '<c r="' + COLS[i] + n + '" t="inlineStr"><is><t xml:space="preserve">' +
+          xmlEsc(v) + "</t></is></c>";
+      }).join("");
+      return '<row r="' + n + '">' + cells + "</row>";
+    }
+
+    var rows = [row(2, HEAD)];
+    state.records.forEach(function (r, i) {
+      rows.push(row(i + 3, [r.id, r.name, r.color, r.sex, r.ach, r.dam, r.sire]));
+    });
+
+    var lastRow = state.records.length + 2;
+    var sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<dimension ref="B2:H' + lastRow + '"/>' +
+      '<sheetFormatPr defaultRowHeight="16"/>' +
+      "<cols>" +
+        '<col min="2" max="2" width="16" customWidth="1"/>' +
+        '<col min="3" max="3" width="18" customWidth="1"/>' +
+        '<col min="4" max="5" width="14" customWidth="1"/>' +
+        '<col min="6" max="6" width="46" customWidth="1"/>' +
+        '<col min="7" max="8" width="16" customWidth="1"/>' +
+      "</cols>" +
+      "<sheetData>" + rows.join("") + "</sheetData></worksheet>";
+
+    var enc = new TextEncoder();
+    return zipStore([
+      { name: "[Content_Types].xml", data: enc.encode(
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        "</Types>") },
+      { name: "_rels/.rels", data: enc.encode(
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+        "</Relationships>") },
+      { name: "xl/workbook.xml", data: enc.encode(
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>') },
+      { name: "xl/_rels/workbook.xml.rels", data: enc.encode(
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+        "</Relationships>") },
+      { name: "xl/worksheets/sheet1.xml", data: enc.encode(sheet) }
+    ]);
+  }
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  document.getElementById("btnExcel").addEventListener("click", function () {
+    if (!state.records.length) { msg("Belum ada data untuk diekspor.", "err"); return; }
+    try {
+      downloadBlob(buildXlsx(), "test pedigree.xlsx");
+      msg("Excel diunduh. Pindahkan ke folder ini menggantikan berkas lama.", "ok");
+    } catch (e) {
+      msg("Gagal membuat berkas Excel.", "err");
+      console.error(e);
+    }
+  });
+
+  // Foto diunduh berurutan; peramban memblokir bila banyak unduhan
+  // dipicu bersamaan dalam satu waktu.
+  document.getElementById("btnPhotos").addEventListener("click", function () {
+    var ids = Object.keys(state.photos);
+    if (!ids.length) { msg("Belum ada foto untuk diunduh.", "err"); return; }
+    var btn = this;
+    btn.disabled = true;
+    var i = 0;
+    (function next() {
+      if (i >= ids.length) {
+        btn.disabled = false;
+        msg(ids.length + " foto diunduh. Pindahkan semuanya ke folder Gambar Mpos.", "ok");
+        return;
+      }
+      var id = ids[i++];
+      var uri = state.photos[id];
+      var mime = (uri.match(/^data:([^;]+)/) || [])[1] || "image/jpeg";
+      var ext = mime === "image/png" ? "png" : (mime === "image/webp" ? "webp" : "jpeg");
+      fetch(uri).then(function (r) { return r.blob(); }).then(function (b) {
+        downloadBlob(b, id + "." + ext);
+        setTimeout(next, 350);
+      }).catch(function (e) {
+        console.error("Gagal mengunduh foto " + id, e);
+        setTimeout(next, 350);
+      });
+    })();
+  });
+
+  // ---------------------------------------------------------------------
+  // Awal
+  // ---------------------------------------------------------------------
+  // Identitas pemilik dan logo diambil dari profil.html.
+  try {
+    var prof = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+    if (prof) { OWNER = prof; LOGO = prof.logo || null; }
+  } catch (e) {
+    console.error("Gagal membaca profil pemilik:", e);
+  }
+
+  function setOwnerLine(id, value) {
+    var el = document.getElementById(id);
+    el.textContent = value || "";
+    el.hidden = !value;
+  }
+  setOwnerLine("ownerName", OWNER.name);
+  setOwnerLine("ownerAddress", OWNER.address);
+  setOwnerLine("ownerContact", OWNER.phone);
+
+  if (OWNER.name) document.getElementById("pageTitle").textContent = "Pedigree " + OWNER.name;
+  document.getElementById("logoBlock").innerHTML = LOGO ?
+    '<img src="' + LOGO + '" alt="Logo kandang">' :
+    '<div class="logo-fallback">Logo belum diatur</div>';
+
+  load();
+  clearForm();
+  renderAll();
+
+  // Tanpa profil, pedigree akan tampil tanpa identitas pemilik - arahkan dulu.
+  if (!OWNER.name) {
+    document.getElementById("profileWarn").hidden = false;
+  }
+})();
+</script>
+</body>
+</html>
